@@ -1,0 +1,7 @@
+{
+  "name": "Block dangerous rm -rf command",
+  "hook_script": "fixtures/hooks/test-guard.sh",
+  "event": {"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}},
+  "expected": {"exit_code": 2, "stderr_contains": ["blocked"]},
+  "timeout_seconds": 5
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Allow safe edit operation",
+  "hook_script": "fixtures/hooks/test-guard.sh",
+  "event": {"tool_name": "Edit", "tool_input": {"file_path": "src/main.py"}},
+  "expected": {"exit_code": 0},
+  "timeout_seconds": 5
+}
