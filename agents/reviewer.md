@@ -2,8 +2,8 @@
 name: anvil-reviewer
 description: |
   Pre-publication quality review for Claude Code plugins. Checks plugin.json
-  completeness, README quality, skill descriptions, hook security, and heurema
-  conventions. Read-only. Use before publishing a plugin.
+  completeness, README quality, install instructions, skill descriptions, hook
+  security, and heurema conventions. Read-only. Use before publishing a plugin.
   Triggers: "review plugin", "plugin review", "pre-publish check", "anvil review"
 model: sonnet
 tools: [Read, Grep, Glob, Bash]
@@ -24,7 +24,7 @@ The user will provide a plugin path (e.g. `~/personal/heurema/fabrica/sigil`). I
 - Check every item in the checklist even if early items fail — give a complete picture.
 - Do not modify any files. This agent is read-only.
 
-## Review Checklist (20 items)
+## Review Checklist (21 items)
 
 Work through each item systematically. For each item, read or grep the relevant file(s) and record the result.
 
@@ -85,6 +85,15 @@ Work through each item systematically. For each item, read or grep the relevant 
 19. **Prompt templates in lib/prompts/** — If the plugin has standalone prompt strings (multi-paragraph LLM instructions not tied to a specific command), check that they are stored under `lib/prompts/` rather than inline in the command/skill body. If inline prompts exceed ~50 lines and no `lib/prompts/` directory exists, WARN.
 
 20. **Conventional Commits in git log** — If a `.git` directory exists at the plugin root, run `git -C <plugin_path> log --oneline -20` and check that commit messages follow Conventional Commits format: `type: description` or `type(scope): description` where type is one of `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `style`, `ci`, `perf`. WARN if more than 25% of the last 20 commits do not follow this format. If no `.git` directory exists, mark N/A.
+
+### Install Documentation (item 21)
+
+21. **Install instructions match official Claude Code plugin docs** — Read `README.md` and verify:
+    - A fenced code block contains `claude plugin marketplace add heurema/emporium`
+    - A fenced code block contains `claude plugin install <name>@emporium` where `<name>` matches `plugin.json` `name`
+    - Install command uses the `@marketplace-name` suffix (per official docs: https://code.claude.com/docs/en/discover-plugins)
+    - If a `marketplace.json` exists in `.claude-plugin/`, it must have `name` and `owner` fields
+    - FAIL if install command is missing or uses wrong syntax. WARN if `<!-- INSTALL:START -->` / `<!-- INSTALL:END -->` markers are absent.
 
 ## Output Format
 

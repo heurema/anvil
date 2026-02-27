@@ -4,16 +4,18 @@ Plugin development toolkit for the heurema fabrica workspace — scaffold, valid
 
 ## Overview
 
-Anvil is a Claude Code plugin used exclusively within the [heurema fabrica](https://github.com/heurema) workspace to develop other plugins. It combines an LLM-driven scaffold command with a deterministic 5-validator pipeline and a fixture-driven hook test runner, closing the loop between creation and publication quality gate. Anvil is not a general-purpose plugin linter — it encodes heurema-specific conventions and is intended for fabrica maintainers only.
+Anvil is a Claude Code plugin used exclusively within the [heurema fabrica](https://github.com/heurema) workspace to develop other plugins. It combines an LLM-driven scaffold command with a deterministic 6-validator pipeline and a fixture-driven hook test runner, closing the loop between creation and publication quality gate. Anvil is not a general-purpose plugin linter — it encodes heurema-specific conventions and is intended for fabrica maintainers only.
 
 ## Installation
 
 ### Via Emporium (recommended)
 
+<!-- INSTALL:START — auto-synced from emporium/INSTALL_REFERENCE.md -->
 ```bash
 claude plugin marketplace add heurema/emporium   # once
 claude plugin install anvil@emporium
 ```
+<!-- INSTALL:END -->
 
 ### Manual
 
@@ -41,7 +43,7 @@ Scaffold a new plugin under `~/personal/heurema/fabrica/<name>/`. Interactively 
 
 ### `/anvil:check [path]`
 
-Run the 5-validator pipeline against a plugin directory. Validators execute sequentially; if `validate_schema` reports a missing manifest (`schema.no_manifest`), conventions and consistency checks are skipped. Results are aggregated into a unified report with ERROR / WARN / INFO counts and a PASS or FAIL verdict.
+Run the 6-validator pipeline against a plugin directory. Validators execute sequentially; if `validate_schema` reports a missing manifest (`schema.no_manifest`), conventions and consistency checks are skipped. Results are aggregated into a unified report with ERROR / WARN / INFO counts and a PASS or FAIL verdict.
 
 Validators:
 
@@ -52,6 +54,7 @@ Validators:
 | `validate_hooks.py` | Hook scripts executable, use `jq` or Python JSON parsing for stdin, no dangerous shell patterns (`eval`, unquoted expansions), no hardcoded absolute paths |
 | `validate_conventions.py` | `@${CLAUDE_PLUGIN_ROOT}/` injection syntax, prompt templates in `lib/prompts/`, skill descriptions (third person, keyword-rich, under 1024 chars), no XML tags in frontmatter |
 | `validate_consistency.py` | Cross-file coherence: `plugin.json` name matches directory, version matches CHANGELOG, no duplicate command names |
+| `validate_install_docs.py` | README install instructions: `claude plugin marketplace add` and `claude plugin install` present, name matches `plugin.json`, `@marketplace` suffix, optional CLI validate |
 
 ### `/anvil:test [path]`
 
@@ -61,7 +64,7 @@ Run fixture-driven hook tests and skill description checks against a plugin dire
 
 ### anvil-reviewer
 
-A read-only sonnet agent that performs a 20-item pre-publication quality review. It checks schema and metadata completeness, README and CHANGELOG quality, command and skill frontmatter, hook security (no hardcoded paths, no `eval`, stdin JSON safety), and heurema conventions. Produces a structured findings table with PASS / FAIL / WARN / N/A status per item, a verdict (APPROVE or REQUEST CHANGES), and numbered required fixes if any FAILs are found.
+A read-only sonnet agent that performs a 21-item pre-publication quality review. It checks schema and metadata completeness, README and CHANGELOG quality, command and skill frontmatter, hook security (no hardcoded paths, no `eval`, stdin JSON safety), and heurema conventions. Produces a structured findings table with PASS / FAIL / WARN / N/A status per item, a verdict (APPROVE or REQUEST CHANGES), and numbered required fixes if any FAILs are found.
 
 Use anvil-reviewer as a final gate before pushing a plugin to GitHub and submitting it to the emporium marketplace. It is not a replacement for `/anvil:check` and `/anvil:test` — run those first to catch structural and hook issues deterministically.
 
@@ -112,6 +115,7 @@ python3 scripts/validate_structure.py . --json
 python3 scripts/validate_hooks.py . --json
 python3 scripts/validate_conventions.py . --json
 python3 scripts/validate_consistency.py . --json
+python3 scripts/validate_install_docs.py . --json
 ```
 
 Or use `/anvil:check ~/personal/heurema/fabrica/anvil` from within Claude Code.

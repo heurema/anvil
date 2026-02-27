@@ -1,7 +1,7 @@
 ---
 description: |
   Deep validation of a Claude Code plugin. Runs schema, structure, hooks,
-  conventions, and cross-repo consistency checks. Use when you want to
+  conventions, consistency, and install-docs checks. Use when you want to
   validate a plugin before publication or after changes.
   Triggers: "validate plugin", "check plugin", "anvil check", "/anvil:check"
 argument-hint: "[path-to-plugin]"
@@ -54,6 +54,10 @@ python3 @${CLAUDE_PLUGIN_ROOT}/scripts/validate_conventions.py "$PLUGIN_PATH" --
 python3 @${CLAUDE_PLUGIN_ROOT}/scripts/validate_consistency.py "$PLUGIN_PATH" --json
 ```
 
+```bash
+python3 @${CLAUDE_PLUGIN_ROOT}/scripts/validate_install_docs.py "$PLUGIN_PATH" --json
+```
+
 ### Step 4: Short-circuit rule
 
 After running `validate_schema.py`, inspect its findings array. If any finding has `"check_id": "schema.no_manifest"`, skip `validate_conventions.py` and `validate_consistency.py` entirely. State:
@@ -86,7 +90,7 @@ Print a human-readable report in this format:
 - [conventions.aaa] message
 
 ---
-Validators run: schema, structure, hooks, conventions, consistency   (or fewer if short-circuited)
+Validators run: schema, structure, hooks, conventions, consistency, install-docs   (or fewer if short-circuited)
 ```
 
 Omit a severity section entirely if its count is 0.
