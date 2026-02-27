@@ -1,0 +1,12 @@
+{
+  "name": "anvil",
+  "description": "Plugin dev/test toolkit for heurema. Scaffold, validate, test, and review Claude Code plugins.",
+  "version": "0.1.0",
+  "author": {
+    "name": "heurema"
+  },
+  "homepage": "https://github.com/heurema/anvil",
+  "repository": "https://github.com/heurema/anvil",
+  "license": "MIT",
+  "keywords": ["plugin-development", "testing", "validation", "scaffold", "heurema"]
+}
