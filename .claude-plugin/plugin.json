@@ -8,5 +8,8 @@
   "homepage": "https://github.com/heurema/anvil",
   "repository": "https://github.com/heurema/anvil",
   "license": "MIT",
-  "keywords": ["plugin-development", "testing", "validation", "scaffold", "heurema"]
+  "keywords": ["plugin-development", "testing", "validation", "scaffold", "heurema"],
+  "status": "active",
+  "owner": "heurema",
+  "tags": ["devtools", "plugin-dev", "validation"]
 }
