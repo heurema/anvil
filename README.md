@@ -1,14 +1,18 @@
-# anvil
+# Anvil
 
-Plugin development toolkit for the heurema fabrica workspace — scaffold, validate, and test Claude Code plugins before publication.
+> Scaffold, validate, test, and review Claude Code plugins — all locally, all in one tool.
 
-## Overview
+Anvil is the official plugin development toolkit for the heurema ecosystem. It gives plugin authors three commands that cover the complete plugin lifecycle: scaffold a new plugin from heurema-standard templates, run six sequential validators to catch schema errors, missing files, and unsafe hook scripts before you publish, and execute fixture-driven hook tests to verify runtime behaviour. A built-in code-review agent applies a 21-item quality checklist and returns an explicit APPROVE or REQUEST CHANGES verdict. Everything runs locally — no network, no credentials.
 
-Anvil is a Claude Code plugin used exclusively within the [heurema fabrica](https://github.com/heurema) workspace to develop other plugins. It combines an LLM-driven scaffold command with a deterministic 6-validator pipeline and a fixture-driven hook test runner, closing the loop between creation and publication quality gate. Anvil is not a general-purpose plugin linter — it encodes heurema-specific conventions and is intended for fabrica maintainers only.
+```
+$ /anvil:new my-plugin
+$ /anvil:check ./my-plugin
+$ /anvil:test  ./my-plugin
+```
 
-## Installation
+## Quick Start
 
-### Via Emporium (recommended)
+**Install via Emporium (recommended)**
 
 <!-- INSTALL:START — auto-synced from emporium/INSTALL_REFERENCE.md -->
 ```bash
@@ -17,7 +21,7 @@ claude plugin install anvil@emporium
 ```
 <!-- INSTALL:END -->
 
-### Manual
+**Manual install**
 
 ```bash
 git clone https://github.com/heurema/anvil.git ~/.claude/plugins/anvil
@@ -33,100 +37,42 @@ Then enable in `~/.claude/settings.json`:
 }
 ```
 
-Verify: `ls ~/.claude/plugins/anvil/commands/` should show `new.md`, `check.md`, and `test.md`. Then open a new Claude Code session.
+Verify: `ls ~/.claude/plugins/anvil/commands/` should show `new.md`, `check.md`, and `test.md`. Open a new Claude Code session to activate.
 
-## Commands
-
-### `/anvil:new [name]`
-
-Scaffold a new plugin under `~/personal/heurema/fabrica/<name>/`. Interactively collects plugin name, description, and keywords, then creates the full directory structure and fills five templates: `plugin.json`, `README.md`, `LICENSE`, `.gitignore`, and `CHANGELOG.md`. Optionally initializes a git repository and creates a GitHub repo under the heurema org.
-
-### `/anvil:check [path]`
-
-Run the 6-validator pipeline against a plugin directory. Validators execute sequentially; if `validate_schema` reports a missing manifest (`schema.no_manifest`), conventions and consistency checks are skipped. Results are aggregated into a unified report with ERROR / WARN / INFO counts and a PASS or FAIL verdict.
-
-Validators:
-
-| Validator | What it checks |
-|-----------|---------------|
-| `validate_schema.py` | `plugin.json` required fields, semver format, name slug, CHANGELOG version alignment |
-| `validate_structure.py` | Required files present (`README.md`, `LICENSE`, `CHANGELOG.md`), declared commands/agents/skills exist on disk |
-| `validate_hooks.py` | Hook scripts executable, use `jq` or Python JSON parsing for stdin, no dangerous shell patterns (`eval`, unquoted expansions), no hardcoded absolute paths |
-| `validate_conventions.py` | `@${CLAUDE_PLUGIN_ROOT}/` injection syntax, prompt templates in `lib/prompts/`, skill descriptions (third person, keyword-rich, under 1024 chars), no XML tags in frontmatter |
-| `validate_consistency.py` | Cross-file coherence: `plugin.json` name matches directory, version matches CHANGELOG, no duplicate command names |
-| `validate_install_docs.py` | README install instructions: `claude plugin marketplace add` and `claude plugin install` present, name matches `plugin.json`, `@marketplace` suffix, optional CLI validate |
-
-### `/anvil:test [path]`
-
-Run fixture-driven hook tests and skill description checks against a plugin directory. Hook tests exercise actual hook scripts against JSON payloads from `fixtures/hooks/`. Skill checks verify each `skills/*/SKILL.md` description for presence, voice, length, and keyword coverage. Produces a two-section report (Hook Tests / Skill Checks) with a summary verdict.
-
-## Agent
-
-### anvil-reviewer
-
-A read-only sonnet agent that performs a 21-item pre-publication quality review. It checks schema and metadata completeness, README and CHANGELOG quality, command and skill frontmatter, hook security (no hardcoded paths, no `eval`, stdin JSON safety), and heurema conventions. Produces a structured findings table with PASS / FAIL / WARN / N/A status per item, a verdict (APPROVE or REQUEST CHANGES), and numbered required fixes if any FAILs are found.
-
-Use anvil-reviewer as a final gate before pushing a plugin to GitHub and submitting it to the emporium marketplace. It is not a replacement for `/anvil:check` and `/anvil:test` — run those first to catch structural and hook issues deterministically.
-
-## Skill
-
-### heurema-conventions
-
-An auto-triggered skill (not user-invocable) that injects heurema plugin development conventions into the context whenever Claude Code is creating or editing plugin components: commands, skills, agents, hooks, or `plugin.json`. Covers file injection syntax (`@${CLAUDE_PLUGIN_ROOT}/path`), prompt organization (`lib/prompts/`), agent and skill frontmatter requirements, hook safety rules, shell portability, quality gate steps, and Conventional Commits format. The skill fires automatically — no explicit invocation needed.
-
-## Fixtures
-
-### Hook test fixtures (`fixtures/hooks/`)
-
-Each subdirectory represents one test case and contains a `case.json` file:
-
-```json
-{
-  "name": "Block dangerous rm -rf command",
-  "hook_script": "fixtures/hooks/test-guard.sh",
-  "event": {"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}},
-  "expected": {"exit_code": 2, "stderr_contains": ["blocked"]},
-  "timeout_seconds": 5
-}
-```
-
-Fields:
-- `name` — human-readable test description
-- `hook_script` — path to the hook script under test (relative to the plugin root)
-- `event` — JSON payload fed to the script via stdin, simulating a Claude Code hook event
-- `expected` — assertions: `exit_code` (required), `stdout_contains` (optional array), `stderr_contains` (optional array)
-- `timeout_seconds` — maximum runtime before the test fails
-
-`test_hooks.py` iterates all `fixtures/hooks/*/case.json` files, feeds the event payload to the script via stdin, and compares exit code and output against the expected values.
-
-### Plugin samples (`fixtures/plugin-samples/`)
-
-Two reference plugin directories used by validator tests:
-- `valid-minimal/` — smallest valid plugin (passes all validators)
-- `broken-schema/` — intentionally malformed `plugin.json` (exercises `validate_schema` error paths)
-
-## Development
-
-To work on anvil itself, run validators against the anvil directory:
+**First use**
 
 ```bash
-python3 scripts/validate_schema.py . --json
-python3 scripts/validate_structure.py . --json
-python3 scripts/validate_hooks.py . --json
-python3 scripts/validate_conventions.py . --json
-python3 scripts/validate_consistency.py . --json
-python3 scripts/validate_install_docs.py . --json
+# Scaffold a new plugin interactively
+/anvil:new my-plugin
+
+# Then validate and test before committing
+/anvil:check ./my-plugin
+/anvil:test  ./my-plugin
 ```
 
-Or use `/anvil:check ~/personal/heurema/fabrica/anvil` from within Claude Code.
+## Key Features
 
-Run the hook test suite:
+- **Scaffolding** — `/anvil:new` generates a complete, conventions-compliant plugin skeleton (plugin.json, README, LICENSE, CHANGELOG, .gitignore) from maintained templates; optionally initialises a git repo and creates a GitHub repository under the heurema org.
+- **Six-layer validation** — `/anvil:check` runs schema, structure, hooks, conventions, consistency, and install-docs validators in sequence and returns a single PASS/FAIL verdict with a JSON-aggregated report.
+- **Fixture-driven hook testing** — `/anvil:test` executes `scripts/test_hooks.py` against your hook scripts and checks skill descriptions for presence, voice, length, and keywords.
+- **AI code review** — The `anvil-reviewer` agent (sonnet, read-only) applies a 21-item checklist and gives an unambiguous APPROVE or REQUEST CHANGES verdict.
+- **Zero network dependency** — all validation and scaffolding is local; the optional `gh repo create` step is explicit and opt-in.
 
-```bash
-python3 scripts/test_hooks.py .
-```
+## Privacy & Data
 
-All validators share a common severity model and JSON output schema defined in `scripts/common.py`. Add new check IDs using the `report.error()`, `report.warn()`, or `report.info()` methods.
+Anvil makes no network calls during validation or scaffolding. No plugin files, metadata, or diagnostic output leave your machine. The optional GitHub repository creation step in `/anvil:new` uses your local `gh` CLI and is gated behind an explicit confirmation prompt.
+
+## Requirements
+
+- Claude Code with plugin support
+- Python 3.14+ (for validator scripts and test framework)
+- `jq` (for hook validators)
+- `gh` CLI — optional, only needed if you want `/anvil:new` to create a GitHub repository
+
+## Documentation
+
+- [How it works](docs/how-it-works.md) — architecture, components, data flow, trust boundaries, limitations
+- [Reference](docs/reference.md) — command usage, scenarios, configuration, output format, troubleshooting
 
 ## See Also
 
