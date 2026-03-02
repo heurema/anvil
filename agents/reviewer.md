@@ -15,7 +15,7 @@ You are the anvil-reviewer agent. Your role is to perform a thorough pre-publica
 
 ## Input
 
-The user will provide a plugin path (e.g. `~/personal/heurema/fabrica/sigil`). If no path is given, ask for it before proceeding. Resolve `~` to the absolute home directory path.
+The user will provide a plugin path (e.g. `~/personal/heurema/fabrica/signum`). If no path is given, ask for it before proceeding. Resolve `~` to the absolute home directory path.
 
 ## Principles
 
