@@ -77,7 +77,7 @@ def validate(plugin_path: Path, report: Report) -> None:
     if plugin_name:
         name_found = False
         for arg in install_matches:
-            # arg is like "sigil@emporium" or "sigil"
+            # arg is like "signum@emporium" or "signum"
             install_name = arg.split("@")[0]
             if install_name == plugin_name:
                 name_found = True
