@@ -6,8 +6,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import re
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import Report, resolve_plugin_path
+from common import Report, resolve_plugin_path, load_json_file
 
 COMPONENT_DIRS = ("commands", "skills", "agents", "hooks")
 ALLOWED_IN_CLAUDE_PLUGIN = {"plugin.json", "marketplace.json"}
@@ -42,6 +44,25 @@ def validate(plugin_path: Path, report: Report) -> None:
     # LICENSE
     if not (plugin_path / "LICENSE").exists():
         report.warn("structure.no_license", "Missing LICENSE file")
+
+    # Feedback/Reporter section in README (required for heurema plugins)
+    if readme.exists() and readme.stat().st_size >= 50:
+        readme_text = readme.read_text(encoding="utf-8")
+        has_feedback = bool(re.search(r"(?im)^##\s+(?:feedback|обратная связь)", readme_text))
+        has_reporter = "reporter" in readme_text.lower()
+        pj = load_json_file(plugin_path / ".claude-plugin" / "plugin.json")
+        is_heurema = False
+        if isinstance(pj, dict):
+            author = pj.get("author", {})
+            if isinstance(author, dict):
+                is_heurema = "heurema" in author.get("name", "").lower()
+        if not has_feedback or not has_reporter:
+            if is_heurema:
+                report.error("structure.no_feedback_section",
+                             "README.md missing Feedback section with reporter install instructions")
+            else:
+                report.warn("structure.no_feedback_section",
+                            "README.md missing Feedback section (recommended)")
 
     # Commands must be .md
     cmd_dir = plugin_path / "commands"
